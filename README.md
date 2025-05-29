@@ -1,4 +1,4 @@
-# DataMininig_term
+###서울시 월세 예측 및 결정 요인 분석# DataMininig_termProject Team3
 
 ## 파일 구성
 data파일 : 사용된 데이터 모음 
@@ -6,4 +6,4 @@ L원본 데이터: 아파트(전월세)_실거래가_20250522185247.csv, 연립�
 |Prepocessing.ipynb  \>>> 매물 정보 + 추가 피쳐 생성을 위한 여러 데이터 추가
 
 ###
-안녕하십니까
+
