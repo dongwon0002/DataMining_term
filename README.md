@@ -1,6 +1,8 @@
 ## 서울시 월세예측&결정요인 분석
 ![image](https://github.com/user-attachments/assets/0126b02e-6635-4df4-a5cc-69273b7ac8c6)
 
+
+### 배경 및 필요성
 <pre>
 
  전세사기 증가로 월세 수요는 증가하는 가운데 월세에 대한 판단 기준이 부족하다고 판단하여
@@ -9,7 +11,6 @@
  https://n.news.naver.com/article/022/0004031475?sid=101
  </pre>
   
-### 배경 및 필요성
 
 #### 폴더 설명
 
