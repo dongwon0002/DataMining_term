@@ -37,7 +37,7 @@ L원본 데이터: 아파트(전월세)_실거래가_20250522185247.csv, 연립�
 ### XGBoost 모델링
 
 #### 알고리즘 선정 이유
- XGBoost(eXtreme Gradient Boosting): 결정 트리 기반의 앙상블 회귀/분류 모델이며 Gradient Boosting 방식을 빠르고 정밀하게 구현한 알고리즘이다. 
+ **XGBoost(eXtreme Gradient Boosting)**: 결정 트리 기반의 앙상블 회귀/분류 모델이며 Gradient Boosting 방식을 빠르고 정밀하게 구현한 알고리즘이다. 
 초기에는 Random Forest를 고려했으나 40만 개가 넘는 객체의 방대한 규모를 다루기에는 모델 학습 시간과 효율성을 고려할 필요가 있었다. 
 Random Forest의 경우 병렬성이 낮고 대규모일수록 학습 시간이 증가한다는 점과 다수의 feature를 고려하였을 때, 사용이 힘들 것이라 판단하였다. 
 따라서, 더 빠르고 최적화된 학습이 가능하면서도 복잡한 변수 간 상호작용을 잘 학습할 수 있는 XGBoost를 선택하게 되었다.
