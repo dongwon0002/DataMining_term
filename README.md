@@ -34,15 +34,15 @@ Index(['시군구', '번지', '본번', '부번', '전월세구분', '전용면�
 ```
 
 1.아파트, 연립다세대 데이터 통합
- - 같은 컬럼을 가리고 있어 두 데이터를 합친다
+  - 같은 컬럼을 가리고 있어 두 데이터를 합친다
 ```python
 combined = pd.concat([df_apt, df_vil], ignore_index=True)
 ```
 2. 데이터 타입변환, 세부컬럼 생성 
- - ```시군구```컬럼 ```시```,```군```,```구```로 나눔
- - ```보증금(만원)```,```월세금(만원)```컬럼의  컴마(,)제거하고 숫자형 컬럼으로 변경
- - ```계약년월```컬럼에서 ```계약년```, ```계약월```컬럼으로 세분화후 숫자형 변수로
- - ```계약기간```컬럼에서 ```시작연,시작월,종료연,종료월```컬럼 추출후 ```계약개월수```컬럼 생성
+  - ```시군구```컬럼 ```시```,```군```,```구```로 나눔
+  - ```보증금(만원)```,```월세금(만원)```컬럼의  컴마(,)제거하고 숫자형 컬럼으로 변경
+  - ```계약년월```컬럼에서 ```계약년```, ```계약월```컬럼으로 세분화후 숫자형 변수로
+  - ```계약기간```컬럼에서 ```시작연,시작월,종료연,종료월```컬럼 추출후 ```계약개월수```컬럼 생성
 ```python
 # 1. '시군구' 분리
 com['시'] = com['시군구'].str.split(expand=True)[0]
@@ -78,6 +78,14 @@ com.drop(['계약구분','갱신요구권 사용','시군구','계약년월','�
 ```
 4. 모델 타겟 후보 피쳐등 생성
  - 테스트를 위한 타겟 컬럼을 여럿 생성
+ - ### 자기자본으로 보증금을 마련하는 경우 (기회비용)
+$$[
+\text{월 부담액} = \left( \frac{\text{보증금} \times \text{연 이자율}}{12} \right) + \text{월세}
+]$$
+### 대출로 보증금을 마련하는 경우 (대출이자만) => 원금상환은 제외
+$$[
+\text{월 부담액} = \left( \frac{\text{보증금} \times 0.7 \times \text{연 대출금리}}{12} \right) + \text{월세}
+]$$
 ```python
 com['보증금/월세금'] = com['보증금(만원)']/com['월세금(만원)']
 com['보증금/월세금'].round(2)
@@ -92,7 +100,7 @@ com['월세금/면적'] = com['월세금(만원)']/df00['전용면적(㎡)']
 com['월세금/면적'] = com['면적/월세금'].round(2)
 ```
 5. ```도로명``` 컬럼을 이용해 ```위도```, ```경도```컬럼 생성
- -  카카오맵 API를 사용하여 위경도 추출
+  -  카카오맵 API를 사용하여 위경도 추출
 ```python
 import requests
 import pandas as pd
@@ -128,9 +136,9 @@ com['위도'] = com['도로명'].map(lambda x: address_to_latlng.get(x, (None, N
 com['경도'] = com['도로명'].map(lambda x: address_to_latlng.get(x, (None, None))[1])
 ````
 6. ```위도```, ```경도```컬럼을 이용해 법정동, 행정도 데이터 생성
- - 법정동, 행정동 폴리곤 .shp파일을 이용하여 각각의 매물이 어느 동에 위치하는지를 나타내는 컬럼생성
- - 이후 분석과 추가 데이터 통합에 사용
- - 통합할 추가 데이터와의 동 이름 통일
+  - 법정동, 행정동 폴리곤 .shp파일을 이용하여 각각의 매물이 어느 동에 위치하는지를 나타내는 컬럼생성
+  - 이후 분석과 추가 데이터 통합에 사용
+  - 통합할 추가 데이터와의 동 이름 통일
 ```python
 import geopandas as gpd
 import pandas as pd
@@ -170,8 +178,8 @@ com.loc[com['행정동']=='종로5·6가동','행정동']='종로5.6가동'
 com.loc[com['행정동']=='중계2·3동','행정동']='중계2.3동'
 ```
 7. 서울시 병원위치 정보 데이터를 이용해 기준거리 이내 병원개수 컬럼 생성
- - (0.2, 0.5, 1)km 거리 이내의 병원개수 컬럼을 추가
- - BallTree알고리즘에서 Haversine metric을 이용하여 계산
+  - (0.2, 0.5, 1)km 거리 이내의 병원개수 컬럼을 추가
+  - BallTree알고리즘에서 Haversine metric을 이용하여 계산
 ```python
 import numpy as np
 from sklearn.neighbors import BallTree
@@ -199,16 +207,16 @@ for r, km in zip(radii, radius_km):
 (법정동추가 방법은 유사 내용 생략)
 
 8. 전국 음식점 정보 데이터를 이용해 기준거리 이내 음식점개수 컬럼 생성
- - [음식점 전처리_readme.md](https://github.com/dongwon0002/DataMininig_term)
- - 추가 방법은 병원과 동일
+  - [음식점 전처리_readme.md](https://github.com/dongwon0002/DataMininig_term)
+  - 추가 방법은 병원과 동일
 9. 서울시 지구대/파출소 데이터를 이용해 기준거리 이내 지구대/파출소 개수 컬럼 생성
- - [지구대/파출소_readme.md](https://github.com/dongwon0002/DataMininig_term)
+  - [지구대/파출소_readme.md](https://github.com/dongwon0002/DataMininig_term)
 10. 공원데이터를 이용한 기준거리 이내 공원 개수 컬럼 생성
- - [공원 전처리_readme.md](https://github.com/dongwon0002/DataMininig_term)
+  - [공원 전처리_readme.md](https://github.com/dongwon0002/DataMininig_term)
 11. 지하철역 위치 데이터를 이용한 기준거리 이내 지하철 역 개수 컬럼 생성
- - [지하철역 전처리_readme.md](https://github.com/dongwon0002/DataMininig_term)
+  - [지하철역 전처리_readme.md](https://github.com/dongwon0002/DataMininig_term)
 12. 대학/대학원 데이터를 이용한 기준거리 이내 공원 개수 컬럼 생성
- - [대학/대학원 전처리_readme.md](https://github.com/dongwon0002/DataMininig_term)
+  - [대학/대학원 전처리_readme.md](https://github.com/dongwon0002/DataMininig_term)
 13. 서울시 등록인구 통계 데이터와 원본데이터를 행정동을 기준으로 통합
 ```python
 # 1. 필요한 컬럼만 추출
@@ -250,8 +258,8 @@ com['35-64대인구비'] = com['35-64대인구'] / com['합계_계']
 # 필요 없으면 중간 컬럼 삭제
 com.drop(columns=['0-19대인구', '20-34대인구', '35-64대인구'], inplace=True)
 ```
-14. ```주택유형```컬럼으로 encoding
- - 0: 아파트, 1: 연립다세대의 값을 가지는 ```주택유형_encoded```컬럼생성
+15. ```주택유형```컬럼으로 encoding
+  - 0: 아파트, 1: 연립다세대의 값을 가지는 ```주택유형_encoded```컬럼생성
 ```python
 from sklearn.preprocessing import LabelEncoder
 le = LabelEncoder()
