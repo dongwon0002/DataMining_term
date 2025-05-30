@@ -124,7 +124,137 @@ for addr in unique_addresses:
 com['위도'] = com['도로명'].map(lambda x: address_to_latlng.get(x, (None, None))[0])
 com['경도'] = com['도로명'].map(lambda x: address_to_latlng.get(x, (None, None))[1])
 ````
+6. ```위도```, ```경도```컬럼을 이용해 법정동, 행정도 데이터 생성
+ - 법정동, 행정동 폴리곤 .shp파일을 이용하여 각각의 매물이 어느 동에 위치하는지를 나타내는 컬럼생성
+ - 이후 분석과 추가 데이터 통합에 사용
+ - 통합할 추가 데이터와의 동 이름 통일
+```python
+import geopandas as gpd
+import pandas as pd
+from shapely.geometry import Point
 
+# # 1. 행정동 GeoDataFrame 불러오기
+F1 = '/content/drive/MyDrive/DataMining/term project/data/BND_ADM_DONG_PG.shp'
+gdf = gpd.read_file(F1, encoding='cp949')
+# 2. EPSG:5179 좌표계로 가정하고 명시적으로 설정 (중부원점 기준)
+# gdf.set_crs(epsg=5179, inplace=True)
+
+# 3. 위경도 좌표계 (WGS84: EPSG:4326)로 변환
+gdf = gdf.to_crs(epsg=4326)
+
+# 2. com: 위경도 기반 매물 데이터 (예: '경도', '위도' 컬럼 있음)
+# 매물 포인트로 변환
+df00['geometry'] = com.apply(lambda row: Point(row['경도'], row['위도']), axis=1)
+gdf_points = gpd.GeoDataFrame(com, geometry='geometry', crs='EPSG:4326')  # 위경도는 EPSG:4326
+
+# 3. 좌표계 맞추기 (행정동 데이터에 맞추어 변환)
+# gdf_points = gdf_points.to_crs(epsg=5181)
+
+# 4. 공간 조인: 어떤 동의 폴리곤에 포함되는지 계산
+joined = gpd.sjoin(gdf_points, gdf[['ADM_NM', 'geometry']], how='left', predicate='within')
+
+# 5. 결과: joined['ADM_NM'] 이 해당 매물의 행정동 이름
+# 원래 com에 컬럼 추가
+com['행정동'] = joined['ADM_NM']
+
+# 추가할 데이터와 다른 동 이름 통일
+com.loc[com['행정동']=='금호2·3가동','행정동']='금호2.3가동'
+com.loc[com['행정동']=='면목3·8동','행정동']='면목3.8동'
+com.loc[com['행정동']=='상계3·4동','행정동']='상계3.4동'
+com.loc[com['행정동']=='상계6·7동','행정동']='상계6.7동'
+com.loc[com['행정동']=='종로1·2·3·4가동','행정동']='종로1.2.3.4가동'
+com.loc[com['행정동']=='종로5·6가동','행정동']='종로5.6가동'
+com.loc[com['행정동']=='중계2·3동','행정동']='중계2.3동'
+```
+7. 서울시 병원위치 정보 데이터를 이용해 기준거리 이내 병원개수 컬럼 생성
+ - (0.2, 0.5, 1)km 거리 이내의 병원개수 컬럼을 추가
+ - BallTree알고리즘에서 Haversine metric을 이용하여 계산
+```python
+import numpy as np
+from sklearn.neighbors import BallTree
+
+# 위경도 → 라디안 변환 (Haversine 거리 계산을 위해)
+def to_radians(df, lat_col='위도', lon_col='경도'):
+    return np.radians(df[[lat_col, lon_col]].values)
+
+# 1km, 3km, 10km를 라디안으로 변환 (지구 반지름 약 6371km 기준)
+radius_km = [0.2, 0.5, 1]
+radii = [r / 6371.0 for r in radius_km]
+
+# 매물 위치, 병원 위치를 라디안으로 변환
+df00_rad = to_radians(df00, '위도', '경도')
+hos00_rad = to_radians(hos_loc, '병원위도', '병원경도')
+
+# BallTree 생성 (Haversine metric 사용)
+tree = BallTree(hos00_rad, metric='haversine')
+
+# 매물별 거리 내 병원 개수 계산
+for r, km in zip(radii, radius_km):
+    count = tree.query_radius(df00_rad, r=r, count_only=True)
+    df00[f'병원_{km}km내_개수'] = count
+```
+(법정동추가 방법은 유사 내용 생략)
+
+8. 전국 음식점 정보 데이터를 이용해 기준거리 이내 음식점개수 컬럼 생성
+ - [음식점 전처리_readme.md](https://github.com/dongwon0002/DataMininig_term)
+ - 추가 방법은 병원과 동일
+9. 서울시 지구대/파출소 데이터를 이용해 기준거리 이내 지구대/파출소 개수 컬럼 생성
+ - [지구대/파출소_readme.md](https://github.com/dongwon0002/DataMininig_term)
+10. 공원데이터를 이용한 기준거리 이내 공원 개수 컬럼 생성
+ - [공원 전처리_readme.md](https://github.com/dongwon0002/DataMininig_term)
+11. 지하철역 위치 데이터를 이용한 기준거리 이내 지하철 역 개수 컬럼 생성
+ - [지하철역 전처리_readme.md](https://github.com/dongwon0002/DataMininig_term)
+12. 대학/대학원 데이터를 이용한 기준거리 이내 공원 개수 컬럼 생성
+ - [대학/대학원 전처리_readme.md](https://github.com/dongwon0002/DataMininig_term)
+13. 서울시 등록인구 통계 데이터와 원본데이터를 행정동을 기준으로 통합
+```python
+# 1. 필요한 컬럼만 추출
+df_pop = pop[['동별', '연령별', '항목', '2024. 4/4']].copy()
+
+# 2. 새로운 컬럼명 생성: "연령별_항목" 형태
+df_pop['col_name'] = df_pop['연령별'] + '_' + df_pop['항목']
+
+# 3. 피벗: 동별을 인덱스로, 새로운 컬럼명(col_name)을 컬럼으로
+df_pivot = df_pop.pivot_table(index='동별', columns='col_name', values='2024. 4/4')
+
+# 4. 컬럼 이름 초기화
+df_pivot.reset_index(inplace=True)
+
+# 5. df01에 병합 (동별 기준)
+com = com.merge(df_pivot, left_on='행정동', right_on='동별', how='left')
+```
+14. 통합된 등록인구 데이터 이용해 ```합계_등록외국인```,```65세이상_인구비율```,```0-19대인구```,```20-34대인구```,```35-64대인구비```컬럼을 생성
+```python
+# 2. 65세 이상 인구 총합 계산 (계 컬럼 기준)
+age_65_plus_cols = [
+    '65~69세_계', '70~74세_계', '75~79세_계', '80~84세_계', '85~89세_계',
+    '90~94세_계', '95~99세_계', '100세 이상_계'
+]
+foreigner_col = ['합계_등록외국인']
+com['외국인_비율']= com[foreigner_col].sum(axis=1)/com['합계_계']
+com['65세이상_인구비율'] = com[age_65_plus_cols].sum(axis=1)/com['합계_계']
+
+# 연령대별 합 계산
+com['0-19대인구'] = com[['0~4세_계', '5~9세_계', '10~14세_계', '15~19세_계']].sum(axis=1)
+com['20-34대인구'] = com[['20~24세_계', '25~29세_계', '30~34세_계']].sum(axis=1)
+com['35-64대인구'] = com[['35~39세_계', '40~44세_계', '45~49세_계', '50~54세_계', '55~59세_계', '60~64세_계']].sum(axis=1)
+
+# 비율 계산
+com['0-19대인구비'] = com['0-19대인구'] / com['합계_계']
+com['20-34대인구비'] = com['20-34대인구'] / com['합계_계']
+com['35-64대인구비'] = com['35-64대인구'] / com['합계_계']
+
+# 필요 없으면 중간 컬럼 삭제
+com.drop(columns=['0-19대인구', '20-34대인구', '35-64대인구'], inplace=True)
+```
+14. ```주택유형```컬럼으로 encoding
+ - 0: 아파트, 1: 연립다세대의 값을 가지는 ```주택유형_encoded```컬럼생성
+```python
+from sklearn.preprocessing import LabelEncoder
+le = LabelEncoder()
+com['주택유형_encoded'] = com.fit_transform(df['주택유형'])
+com = com.drop(['주택유형'],axis=1)
+```
 
 #### 2. 불필요한 컬럼 제거
 
