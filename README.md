@@ -289,6 +289,46 @@ Random Forest의 경우 병렬성이 낮고 대규모일수록 학습 시간이 
 #### 결과 분석(아파트/다세대 분리 + 거리기반 각 1개만 선정)
  아파트+다세대 R^2 = 0.8/ 아파트 다세대 분리가 가능할 것 같아서 어 꼬ㅒ크내?? 한번 해보자
 
+##타켓 변수 선택
+'''python
+# 스케일링할 타겟 후보 컬럼 리스트
+target_cols = ['보증금(만원)', '월세금(만원)', '월부담액', '보증금/월세금', '월세금/면적']
+
+# 1. 스케일러 선택 (MinMaxScaler or StandardScaler)
+scaler = StandardScaler()
+
+# 2. 해당 컬럼들만 스케일링
+scaled_values = scaler.fit_transform(df[target_cols])
+
+# 3. 스케일된 결과를 데이터프레임으로 변환 (컬럼명 유지)
+df_scaled = pd.DataFrame(scaled_values, columns=target_cols)
+
+# 4. 원본 데이터에서 해당 컬럼들 제거 후 스케일된 컬럼으로 대체
+df.drop(columns=target_cols, inplace=True)
+df = pd.concat([df, df_scaled], axis=1)
+'''
+
+
+## ```train_eval_xgb``` 함수가 하는 것
+데이터를 train_test_split으로 나누고 train 셋에 대해 XGBRegressor모델을 생성하고, test 셋에 대해 RMSE, MAE, R^2값을 반환하고, 모델의 feature importance 그래프와 shap 그래프를 반환 가능하고 그래프는 True, False로 선택가능하다
+### 파라미터
+- ```df```
+- ``` target_col```
+- ```test_size```
+- ```random_state```
+- ``` plot_feature_importance```(bool)
+- ```plot_shap```(bool)
+### return
+- ```model, (X_train, X_test, y_train, y_test)```      
+---------
+
+(ex)
+```python
+model, (X_train, X_test, y_train, y_test) = train_eval_xgb(df.drop(['월부담액','보증금/월세금','월세금/면적','보증금(만원)'],axis=1),'월세금(만원)', plot_feature_importance=False, plot_shap=False)
+```
+\>>> df.drop(['월부담액','보증금/월세금','월세금/면적','보증금(만원)'],axis=1)데이터를 바탕으로 모델을 구성하고 ```'월세금(만원)'```을 타겟으로 선정, 두개 그래프 모두 그리지 않는다
+
+
 #### 모델 개선(아파트/다세대 분리> 각각 평가 > Feature importance로 거리기반 각각 중요만남긴다)
 
 #### 최종 모델(아파트/다세대) 
