@@ -291,19 +291,19 @@ Random Forest의 경우 병렬성이 낮고 대규모일수록 학습 시간이 
 
 ##타켓 변수 선택
 '''python
-# 스케일링할 타겟 후보 컬럼 리스트
+##스케일링할 타겟 후보 컬럼 리스트
 target_cols = ['보증금(만원)', '월세금(만원)', '월부담액', '보증금/월세금', '월세금/면적']
 
-# 1. 스케일러 선택 (MinMaxScaler or StandardScaler)
+##1. 스케일러 선택 (MinMaxScaler or StandardScaler)
 scaler = StandardScaler()
 
-# 2. 해당 컬럼들만 스케일링
+##2. 해당 컬럼들만 스케일링
 scaled_values = scaler.fit_transform(df[target_cols])
 
-# 3. 스케일된 결과를 데이터프레임으로 변환 (컬럼명 유지)
+## 3. 스케일된 결과를 데이터프레임으로 변환 (컬럼명 유지)
 df_scaled = pd.DataFrame(scaled_values, columns=target_cols)
 
-# 4. 원본 데이터에서 해당 컬럼들 제거 후 스케일된 컬럼으로 대체
+## 4. 원본 데이터에서 해당 컬럼들 제거 후 스케일된 컬럼으로 대체
 df.drop(columns=target_cols, inplace=True)
 df = pd.concat([df, df_scaled], axis=1)
 '''
