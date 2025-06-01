@@ -391,7 +391,7 @@ df_type1 = df[df['주택유형_encoded']!=0] #연립다세대
  >>다시 feature importance 어떤 요인이 target에 영향?
 
 ### 시각화 (서울구별로 평귤 월부담액(아파트/다세대) 노원구만 법정동 따서 (아파트/다세대))
-[mapping code(url)]
+[mapping code](https://github.com/dongwon0002/DataMining_term/blob/main/data/mapping.ipynb)
 서울시 자치구를 기준으로 각각의 평균 월부담액을 choropleth mapping
 ![image](https://github.com/user-attachments/assets/c3f6aa06-ef39-4793-a226-04c34c255395)
 ![image](https://github.com/user-attachments/assets/60884edc-e906-4ccb-ae81-ae040316fee9)
