@@ -683,11 +683,15 @@ features: ['병원_1km내_개수', '1km_이내_역_개수', '식당_0.5km내_개
 
 
 
-####  SHAP
- 법정동 노원구 내에서 공릉1동 2동 하계 동 평균 featruer 대입해서 
- 이 동에서는 평균 월 부담액이 70만원이고
- 어떤 요인이 12만원 어던 요인이 5만원~ >>차트로 
- (모델을 통한 새로운 데이터 fitting시 결과 값의 기여도를 알 수 있다.)
+###  SHAP 기여도 분석
+무슨 요인이 모델이 아닌 실제 월 부담액에 얼마나 정량적 영향을 주었는가?
+이 질문에 답하기 위해 SHapley Additive exPlanations을 사용
+예를 들어, 법정동과 주택유형을 설정하였을 때 월 부담액에 따른 각 요인들이 어떤 수치만큼 월 부담금에 기여했는지
+정량적인 시각화가 가능.
+[mapping code](https://github.com/dongwon0002/DataMining_term/blob/main/IMAGES/streamlit_%EC%9B%94%EC%84%B8%EC%9A%94%EC%9D%B8.gif)   
+다른 추가적인 요인들로 설정할 수도 있으며, feature을 더하거나 빼며 요소별 기여도에 대한 명확한 해석을 제공함
+![image](https://github.com/user-attachments/assets/1f997a0b-c0e0-43c3-8a3c-44fcbd5fb284)   
+
 
 
 ### 시사점
