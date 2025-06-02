@@ -92,11 +92,49 @@ pol.loc[pol['관서명']=='도봉1','경도']=127.0434
 ```
    - BallTree알고리즘을 이용해 거리기준 내 지구대/파출소 컬럼 생성 => 위와 동일 코드 생략
       
-3. 공원데이터를 이용한 기준거리 이내 공원 개수 컬럼 생성    
-   - [공원 전처리_readme.md](https://github.com/dongwon0002/DataMininig_term)
+3. 공원데이터를 이용한 기준거리 이내 공원 개수 컬럼 생성
+
+   - 서울시 주요 공원현황.csv 파일의 위도 경도를 가져와서 거리 계산산
+```python
+import pandas as pd
+import numpy as np
+from sklearn.neighbors import BallTree
+
+#위경도 → 라디안 변환 함수
+def to_radians(df, lat_col='위도', lon_col='경도'):
+    return np.radians(df[[lat_col, lon_col]].values)
+
+#반경(km) → 라디안 변환 (지구 반지름 기준 6371km)
+radius_km = [0.3, 0.5, 0.8]
+radii = [r / 6371.0 for r in radius_km]
+
+#파일 불러오기
+buildings = pd.read_csv(r"C:\Users\박우석\Documents\webp\datamining\위도\역개수 추가(100,300,500).csv")
+parks = pd.read_csv(r"C:\Users\박우석\Downloads\서울시 주요 공원현황.csv", encoding="cp949")
+
+#결측치 제거
+buildings = buildings.dropna(subset=['위도', '경도'])
+parks = parks.dropna(subset=['위도', '경도'])
+
+#라디안 변환
+buildings_rad = to_radians(buildings, '위도', '경도')
+parks_rad = to_radians(parks, '위도', '경도')
+
+#BallTree 생성 (공원 기준)
+tree = BallTree(parks_rad, metric='haversine')
+
+#각 반경에 대해 공원 개수 계산
+for r, km in zip(radii, radius_km):
+    count = tree.query_radius(buildings_rad, r=r, count_only=True)
+    buildings[f'공원_{int(km*1000)}m_이내_개수'] = count
+
+#저장
+buildings.to_csv("output_with_parks_balltree.csv", index=False, encoding='utf-8-sig')
+print("✅ BallTree 기반 공원 개수 열 추가 완료 → 'output_with_parks_balltree.csv'")
+```
 
 4. 지하철역 위치 데이터를 이용한 기준거리 이내 지하철 역 개수 컬럼 생성   
-   - [지하철역 전처리_readme.md](https://github.com/dongwon0002/DataMininig_term)
+   
  
 5. 대학/대학원 데이터 전처리
    - 불필요 컬럼 제거
