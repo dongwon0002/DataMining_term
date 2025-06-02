@@ -358,7 +358,7 @@ model, (X_train, X_test, y_train, y_test) = train_eval_xgb(df.drop(['월부담�
 #### 타겟변수 선택
 ```python
 model, (X_train, X_test, y_train, y_test) = train_eval_xgb(df.drop(['월부담액','보증금/월세금','월세금/면적','보증금(만원)'],axis=1),'월세금(만원)',plot_feature_importance=False,plot_shap=False)
-_model, (X_train, X_test, y_train, y_test) = deposit_to_rent(df.drop(['월부담액','보증금/월세금','월세금/면적'],axis=1),test_size=0.3,plot_feature_importance=False,plot_shap=False)
+model, (X_train, X_test, y_train, y_test) = train_eval_xgb(df.drop(['월부담액','보증금/월세금','월세금/면적','월세금(만원)'],axis=1),'보증금(만원)',plot_feature_importance=False,plot_shap=False)
 model, (X_train, X_test, y_train, y_test) = train_eval_xgb(df.drop(['월부담액','월세금/면적','월세금(만원)','보증금(만원)'],axis=1),'보증금/월세금',plot_feature_importance=False,plot_shap=False)
 model, (X_train, X_test, y_train, y_test) = train_eval_xgb(df.drop(['월부담액','보증금/월세금','월세금(만원)','보증금(만원)'],axis=1),'월세금/면적',plot_feature_importance=False,plot_shap=False)
 model, (X_train, X_test, y_train, y_test) = train_eval_xgb(df.drop(['보증금/월세금','월세금/면적','월세금(만원)','보증금(만원)'],axis=1),'월부담액',plot_feature_importance=False,plot_shap=False)
